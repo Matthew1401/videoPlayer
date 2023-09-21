@@ -1,8 +1,10 @@
 <script setup>
-  import { ref, onMounted } from 'vue'
+  import { ref } from 'vue'
 
   const isPlaying = ref(false)
   const video = ref(null)
+  const volumeControl = ref(null)
+  const volume = ref(null)
   const currentVideoTime = ref(0)
 
   const videoPlayToggle = () => {
@@ -18,26 +20,48 @@
     }
   }
 
+  let isClicked = true
+  const showVolumeLevel = () => {
+    if (isClicked) {
+      volumeControl.value.style.width = '85px'
+      volume.value.style.width = '100%'
+      volume.value.style.opacity = '1';
+      console.log(volume.value.style)
+      isClicked = false;
+    }
+    else {
+      volumeControl.value.style.width = '0'
+      volume.value.style.width = '0'
+      volume.value.style.opacity = '0';
+      console.log(volume.value.style)
+      isClicked = true;
+    }
+    
+  }
+
 </script>
 
 <template>
   <main>
     <div class="player">
        <video ref="video" width="1080" @click="videoPlayToggle()">
-        <source src="./assets/earth_1920.mp4" type="video/mp4" />
+        <source src="./assets/test.mp4" type="video/mp4" />
       </video>
 
       <div class="controls">
-        <button :class="[isPlaying ? 'pause-button' : 'play-button']" aria-label="play pause toggle" @click="videoPlayToggle()"></button>
-        <button class="stop-button" data-icon="S" aria-label="stop" @click=""></button>
+        <button :class="[isPlaying ? 'pause-button' : 'play-button']" @click="videoPlayToggle()"></button>
 
         <div class="timer">
-          <div></div>
+          <input class="" type="range" value="0" max="100">
           <span aria-label="timer">00:00</span>
         </div>
+        
+          <button class="volume-button" @click="showVolumeLevel()"></button>
+          <div ref="volumeControl" class="volume-control">
+            <input ref="volume" class="volume" type="range" value="50" max="100">
+          </div> 
 
-          <button class="rwd" data-icon="B" aria-label="rewind"></button>
-          <button class="fwd" data-icon="F" aria-label="fast forward"></button>
+          <button class="menu-button"></button>
         </div>
     </div>
   </main>
@@ -66,7 +90,7 @@
   }
 
   .controls {
-    opacity: 0;
+    opacity: 1;
     width: 80%;
     border-radius: 10px;
     padding: 5px 10px;
@@ -93,6 +117,7 @@
     background-color: gray;
   }
 
+  /* PLAY BUTTON TO SWITCH ON OR OFF THE VIDEO */
   .play-button {
     background-image: url('./assets/icons/play-96.png');
     background-size: cover;
@@ -103,22 +128,50 @@
     background-size: cover;
   }
 
+  /* VOLUME BUTTON TO SHOW AND TO MANIPULATE THE VOLUME LEVEL */
+  .volume-button {
+    background-image: url('./assets/icons/speaker-96.png');
+    background-size: cover;
+  }
+
+  .volume-control {
+    transition: all 1s;
+    line-height: 38px;
+    width: 0px;
+    opacity: 0.9;
+    padding-left: 3px;
+    padding-right: 5px;
+    .volume {
+      display: block;
+      opacity: 0;
+      transition: all 1s;
+      width: 0%;
+      height: 38px;
+    }
+  }
+
+  .menu-button {
+    background-image: url('./assets/icons/menu-100.png');
+    background-size: cover;
+  }
+
   .timer {
     line-height: 38px;
     font-size: 10px;
     font-family: monospace;
     text-shadow: 1px 1px 0px black;
     color: white;
-    flex: 5;
     position: relative;
+    /* background-color: gray; */
+    width: 500px;
   }
 
-  .timer div {
+  .timer input {
     position: absolute;
     background-color: rgba(255, 255, 255, 0.2);
-    left: 0;
+    left: 70px;
     top: 0;
-    width: 0;
+    width: 420px;
     height: 38px;
     z-index: 2;
   }
@@ -127,5 +180,6 @@
     position: absolute;
     z-index: 3;
     left: 19px;
+    font-size: 1rem;
   }
 </style>
