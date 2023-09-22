@@ -9,18 +9,19 @@
         <button :class="[isPlaying ? 'pause-button' : 'play-button']" @click="videoPlayToggle()"></button>
 
         <div class="timer">
-          <span>{{ currentMinutes }}:{{ currentSeconds }}</span>
+          <span class="current">{{ currentMinutes }}:{{ currentSeconds }}</span>
           <div class="space-for-progress-bar">
-            <div class="progress-bar">
+            <div ref="progress" class="progress-bar" onmousedown="">
               <div ref="progressBar" class="progress-bar-fullfiled"></div>
             </div>
           </div>
+          <span class="duration">{{ durationMinutes }}:{{ durationSeconds }}</span>
         </div>
         
         <div class="controls-to-right">
           <button :class="[ muted ? 'volume-button-no-audio': 'volume-button-audio']" @click="switchVolume()"></button>
           <div class="volume-control">
-            <input class="volume" type="range" v-model="volumeLevel" min="0" max="1" step="0.01">
+            <input class="slider" type="range" v-model="volumeLevel" min="0" max="1" step="0.01">
           </div> 
 
           <button class="fullscreen-button" @click="fullscreen()"></button>
@@ -34,17 +35,21 @@
 <!-- 
   Done TODO: 1.Usunąć animacje przy przycisku volume. Niech ten wskaźnik po prostu będzie statyczny.
   Done TODO: 2.Po kliknięciu w przycisk volume zmienia on ikonkę na przekroślony głośnik.
-  Done TODO: 3.Głośność dźwięku działa i realnie wpływa na głośność video.
+  Done TODO: 3.Głośność dźwięku działa i realnie wpływa na głośność wideo.
   Done TODO: 4.Zsynchronizować długość filmu z licznikiem oraz z inputem typu range.
-  Done TODO: 5.Dodać przycisk ustawiający tryb pełnoekranowy dla video.
-
-  TODO: 6.Zmienić stylizację input volume range.
-  TODO: 7.Dodać możliwość przesuwania postępu video za pomocą progress bar.
-  TODO: 8.Dodać możliwość przesuwania filmu o 15 sekund do przodu i do tyłu za pomocą strzałek.
+  Done TODO: 5.Dodać przycisk ustawiający tryb pełnoekranowy dla wideo.
+  Done TODO: 6.Zmienić stylizację input volume range.
+  Done TODO: 7.Dodać możliwość przesuwania postępu wideo za pomocą progress bar.
+  Done TODO: 8.Dodać możliwość przesuwania filmu o 15 sekund do przodu i do tyłu za pomocą strzałek.
+  Done TODO: 9.Gdy ustawienia będą zmieniane w trybie fullscreen dodać aktualizacje wyglądu przycisków oraz volume.
+  Done TODO: 10.Dodać całkowity czas pliku wideo.
+  
+  TODO: 11.Dodać wybór prędkości odtwarzania wideo. Najlepiej wybor select i option przy przycisku menu.
+  TODO: 12.Dodać rezponsywność do strony.
 -->
 
 <script setup>
-  import { ref, watch } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
 
   const isPlaying = ref(false)
   const volumeLevel = ref('0.50')
@@ -52,10 +57,73 @@
   const video = ref(null)
   const currentMinutes = ref('00')
   const currentSeconds = ref('00')
+  const durationMinutes = ref('00')
+  const durationSeconds = ref('00')
+  const progress = ref(null)
   const progressBar = ref(null)
 
 
+  onMounted(() => {
+    // UPDATING TIME
+    video.value.addEventListener('timeupdate', currentTime)
+
+    // UPDATING CURRENT VIDEO TIME USING PROCESS BAR
+    progress.value.addEventListener('click', (e) => {
+      const progressTime = (e.offsetX / progress.value.offsetWidth) * video.value.duration
+      video.value.currentTime = progressTime
+    })
+
+    // UPDATE CURRENT VIDEO TIME USING ARROWS
+    window.addEventListener('keydown', (e) => {
+      let letter = String.fromCharCode(e.keyCode)
+      if (letter == "'") {
+        video.value.currentTime = video.value.currentTime + 15
+      }
+      if (letter == "%") {
+        video.value.currentTime = video.value.currentTime - 15
+      }
+      if (letter == " ") {
+        videoPlayToggle()
+      }
+    })
+    
+   video.value.addEventListener("ended", () => {
+      console.log("Offline audio processing now complete");
+      video.value.pause()
+      isPlaying.value = false
+    })
+
+    video.value.addEventListener("pause", () => {
+      isPlaying.value = false
+    })
+
+    video.value.addEventListener("play", () => {
+      isPlaying.value = true
+    })
+
+    video.value.addEventListener("volumechange", () => {
+      volumeLevel.value = `${video.value.volume}`
+    })
+
+    video.value.addEventListener("muted", () => {
+      console.log('Muted')
+    })
+  })
+
+  watch(volumeLevel, () => {
+    if (volumeLevel.value == '0') {
+      muted.value = true
+      video.value.volume = volumeLevel.value;
+    }
+    else {
+      muted.value = false
+      video.value.volume = volumeLevel.value;
+    }
+  })
+
   const currentTime = () => {
+    durationTime()
+
     // UPDATING THE TIMER VALUE
     currentMinutes.value = Math.floor(video.value.currentTime / 60)
     currentSeconds.value = Math.floor(video.value.currentTime - currentMinutes.value * 60)
@@ -73,20 +141,18 @@
     progressBar.value.style.width = `${percentage}%`
   }  
 
-  watch(video, () => {
-    video.value.addEventListener('timeupdate', currentTime)
-  })
+  const durationTime = () => {
+    durationMinutes.value = Math.floor(video.value.duration / 60)
+    durationSeconds.value = Math.floor(video.value.duration - durationMinutes.value * 60)
 
-  watch(volumeLevel, () => {
-    if (volumeLevel.value == '0') {
-      muted.value = true
-      video.value.volume = volumeLevel.value;
-    }
-    else {
-      muted.value = false
-      video.value.volume = volumeLevel.value;
-    }
-  })
+    if (durationSeconds.value < 10) {
+        durationSeconds.value = `0${durationSeconds.value}`
+      }
+
+      if (durationMinutes.value < 10) {
+        durationMinutes.value = `0${durationMinutes.value}`
+      }
+  }
 
   const switchVolume = () => {
     if (volumeLevel.value == '0') {
@@ -203,11 +269,48 @@
     opacity: 0.9;
     padding-left: 3px;
     padding-right: 5px;
-    .volume {
-      width: 100%;
-    }
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
+  .slider {
+    background-color: rgba(192, 12, 12, 0.2);
+    border: 1px solid rgba(192, 12, 12, 0.2);
+    border-radius: 5px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 2s;
+    width: 100%;
+    height: 13px;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    -webkit-transition: .2s
+  }
+
+  .slider:hover {
+    opacity: 1;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: orangered;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    background: orangered;
+    cursor: pointer;
+  }
+
+  /* MENU AND FULLSCREEN BUTTONS */
   .menu-button {
     background-image: url('./assets/icons/menu-100.png');
     background-size: cover;
@@ -218,6 +321,7 @@
     background-size: cover;  
   }
 
+  /* TIMER AND PROGRESS BAR */
   .timer {
     line-height: 38px;
     font-size: 10px;
@@ -228,7 +332,7 @@
     width: 550px;
   }
 
-  .timer .space-for-progress-bar {
+  .space-for-progress-bar {
     float: right;
     width: 87%;
     height: 38px;
@@ -237,27 +341,39 @@
     align-items: center;
   }
 
-  .timer .space-for-progress-bar .progress-bar {
+  .progress-bar {
     background-color: rgba(192, 12, 12, 0.2);
     width: 100%;
     height: 15px;
     border: 1px solid rgba(192, 12, 12, 0.2);
     border-radius: 5px;
     cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 2s;
   }
 
-  .timer .space-for-progress-bar .progress-bar .progress-bar-fullfiled {
+  .progress-bar:hover {
+    opacity: 1;
+  }
+
+  .progress-bar-fullfiled {
     background-color: orangered;
     width: 0%;
     height: 100%;
-    border: 1px solid orangered;
     border-radius: 5px;
   }
 
-  .timer span {
+  .timer .current {
     position: absolute;
     z-index: 3;
     left: 19px;
+    font-size: 1rem;
+  }
+
+  .timer .duration {
+    position: absolute;
+    z-index: 3;
+    right: -50px;
     font-size: 1rem;
   }
 </style>
