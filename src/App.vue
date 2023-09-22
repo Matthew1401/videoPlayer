@@ -9,8 +9,12 @@
         <button :class="[isPlaying ? 'pause-button' : 'play-button']" @click="videoPlayToggle()"></button>
 
         <div class="timer">
-          <input class="" type="range" value="40" max="100">
           <span>{{ currentMinutes }}:{{ currentSeconds }}</span>
+          <div class="space-for-progress-bar">
+            <div class="progress-bar">
+              <div ref="progressBar" class="progress-bar-fullfiled"></div>
+            </div>
+          </div>
         </div>
         
         <div class="controls-to-right">
@@ -19,6 +23,7 @@
             <input class="volume" type="range" v-model="volumeLevel" min="0" max="1" step="0.01">
           </div> 
 
+          <button class="fullscreen-button" @click="fullscreen()"></button>
           <button class="menu-button"></button>
         </div>
       </div>
@@ -30,10 +35,13 @@
   Done TODO: 1.Usunąć animacje przy przycisku volume. Niech ten wskaźnik po prostu będzie statyczny.
   Done TODO: 2.Po kliknięciu w przycisk volume zmienia on ikonkę na przekroślony głośnik.
   Done TODO: 3.Głośność dźwięku działa i realnie wpływa na głośność video.
+  Done TODO: 4.Zsynchronizować długość filmu z licznikiem oraz z inputem typu range.
+  Done TODO: 5.Dodać przycisk ustawiający tryb pełnoekranowy dla video.
 
-  TODO: 4.Zsynchronizować długość filmu z licznikiem oraz z inputem typu range.
-  TODO: 5.Dodać przycisk ustawiający tryb pełnoekranowy dla video.
- -->
+  TODO: 6.Zmienić stylizację input volume range.
+  TODO: 7.Dodać możliwość przesuwania postępu video za pomocą progress bar.
+  TODO: 8.Dodać możliwość przesuwania filmu o 15 sekund do przodu i do tyłu za pomocą strzałek.
+-->
 
 <script setup>
   import { ref, watch } from 'vue'
@@ -44,9 +52,11 @@
   const video = ref(null)
   const currentMinutes = ref('00')
   const currentSeconds = ref('00')
+  const progressBar = ref(null)
 
 
   const currentTime = () => {
+    // UPDATING THE TIMER VALUE
     currentMinutes.value = Math.floor(video.value.currentTime / 60)
     currentSeconds.value = Math.floor(video.value.currentTime - currentMinutes.value * 60)
 
@@ -57,20 +67,15 @@
     if (currentMinutes.value < 10) {
       currentMinutes.value = `0${currentMinutes.value}`
     }
+
+    // UPDATING THE BAR PROGRESS
+    const percentage = (video.value.currentTime / video.value.duration) * 100
+    progressBar.value.style.width = `${percentage}%`
   }  
 
   watch(video, () => {
     video.value.addEventListener('timeupdate', currentTime)
   })
-
-  const switchVolume = () => {
-    if (volumeLevel.value == '0') {
-      volumeLevel.value = '0.50'
-    }
-    else [
-      volumeLevel.value = '0'
-    ]
-  }
 
   watch(volumeLevel, () => {
     if (volumeLevel.value == '0') {
@@ -83,6 +88,15 @@
     }
   })
 
+  const switchVolume = () => {
+    if (volumeLevel.value == '0') {
+      volumeLevel.value = '0.50'
+    }
+    else [
+      volumeLevel.value = '0'
+    ]
+  }
+
   const videoPlayToggle = () => {
     if (video.value.paused) {
       video.value.play()
@@ -94,6 +108,10 @@
       isPlaying.value = false;
       return
     }
+  }
+
+  const fullscreen = () => {
+    video.value.requestFullscreen()
   }
 
 </script>
@@ -140,7 +158,8 @@
     display: flex;
     justify-content: right;
     text-align: right;
-    width: 37%;
+    width: 30%;
+    float: right;
   }
 
   button {
@@ -194,6 +213,11 @@
     background-size: cover;
   }
 
+  .fullscreen-button {
+    background-image: url('./assets/icons/fullscreen.png');
+    background-size: cover;  
+  }
+
   .timer {
     line-height: 38px;
     font-size: 10px;
@@ -201,18 +225,33 @@
     text-shadow: 1px 1px 0px black;
     color: white;
     position: relative;
-    /* background-color: gray; */
-    width: 500px;
+    width: 550px;
   }
 
-  .timer input {
-    position: absolute;
-    background-color: rgba(255, 255, 255, 0.2);
-    left: 70px;
-    top: 0;
-    width: 420px;
+  .timer .space-for-progress-bar {
+    float: right;
+    width: 87%;
     height: 38px;
-    z-index: 2;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+  }
+
+  .timer .space-for-progress-bar .progress-bar {
+    background-color: rgba(192, 12, 12, 0.2);
+    width: 100%;
+    height: 15px;
+    border: 1px solid rgba(192, 12, 12, 0.2);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .timer .space-for-progress-bar .progress-bar .progress-bar-fullfiled {
+    background-color: orangered;
+    width: 0%;
+    height: 100%;
+    border: 1px solid orangered;
+    border-radius: 5px;
   }
 
   .timer span {
