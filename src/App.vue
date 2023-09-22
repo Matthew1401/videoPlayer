@@ -1,11 +1,87 @@
+<template>
+  <main>
+    <div class="player">
+       <video ref="video" width="1080" @click="videoPlayToggle()">
+        <source src="./assets/test.mp4" type="video/mp4" />
+      </video>
+
+      <div class="controls">
+        <button :class="[isPlaying ? 'pause-button' : 'play-button']" @click="videoPlayToggle()"></button>
+
+        <div class="timer">
+          <input class="" type="range" value="40" max="100">
+          <span>{{ currentMinutes }}:{{ currentSeconds }}</span>
+        </div>
+        
+        <div class="controls-to-right">
+          <button :class="[ muted ? 'volume-button-no-audio': 'volume-button-audio']" @click="switchVolume()"></button>
+          <div class="volume-control">
+            <input class="volume" type="range" v-model="volumeLevel" min="0" max="1" step="0.01">
+          </div> 
+
+          <button class="menu-button"></button>
+        </div>
+      </div>
+    </div>
+  </main>
+</template>
+
+<!-- 
+  Done TODO: 1.Usunąć animacje przy przycisku volume. Niech ten wskaźnik po prostu będzie statyczny.
+  Done TODO: 2.Po kliknięciu w przycisk volume zmienia on ikonkę na przekroślony głośnik.
+  Done TODO: 3.Głośność dźwięku działa i realnie wpływa na głośność video.
+
+  TODO: 4.Zsynchronizować długość filmu z licznikiem oraz z inputem typu range.
+  TODO: 5.Dodać przycisk ustawiający tryb pełnoekranowy dla video.
+ -->
+
 <script setup>
-  import { ref } from 'vue'
+  import { ref, watch } from 'vue'
 
   const isPlaying = ref(false)
+  const volumeLevel = ref('0.50')
+  const muted = ref(false)
   const video = ref(null)
-  const volumeControl = ref(null)
-  const volume = ref(null)
-  const currentVideoTime = ref(0)
+  const currentMinutes = ref('00')
+  const currentSeconds = ref('00')
+
+
+  const currentTime = () => {
+    currentMinutes.value = Math.floor(video.value.currentTime / 60)
+    currentSeconds.value = Math.floor(video.value.currentTime - currentMinutes.value * 60)
+
+    if (currentSeconds.value < 10) {
+      currentSeconds.value = `0${currentSeconds.value}`
+    }
+
+    if (currentMinutes.value < 10) {
+      currentMinutes.value = `0${currentMinutes.value}`
+    }
+  }  
+
+  watch(video, () => {
+    video.value.addEventListener('timeupdate', currentTime)
+  })
+
+  const switchVolume = () => {
+    if (volumeLevel.value == '0') {
+      volumeLevel.value = '0.50'
+    }
+    else [
+      volumeLevel.value = '0'
+    ]
+  }
+
+  watch(volumeLevel, () => {
+    if (volumeLevel.value == '0') {
+      muted.value = true
+      video.value.volume = volumeLevel.value;
+    }
+    else {
+      muted.value = false
+      video.value.volume = volumeLevel.value;
+    }
+  })
 
   const videoPlayToggle = () => {
     if (video.value.paused) {
@@ -20,52 +96,8 @@
     }
   }
 
-  let isClicked = true
-  const showVolumeLevel = () => {
-    if (isClicked) {
-      volumeControl.value.style.width = '85px'
-      volume.value.style.width = '100%'
-      volume.value.style.opacity = '1';
-      console.log(volume.value.style)
-      isClicked = false;
-    }
-    else {
-      volumeControl.value.style.width = '0'
-      volume.value.style.width = '0'
-      volume.value.style.opacity = '0';
-      console.log(volume.value.style)
-      isClicked = true;
-    }
-    
-  }
-
 </script>
 
-<template>
-  <main>
-    <div class="player">
-       <video ref="video" width="1080" @click="videoPlayToggle()">
-        <source src="./assets/test.mp4" type="video/mp4" />
-      </video>
-
-      <div class="controls">
-        <button :class="[isPlaying ? 'pause-button' : 'play-button']" @click="videoPlayToggle()"></button>
-
-        <div class="timer">
-          <input class="" type="range" value="0" max="100">
-          <span aria-label="timer">00:00</span>
-        </div>
-        
-          <button class="volume-button" @click="showVolumeLevel()"></button>
-          <div ref="volumeControl" class="volume-control">
-            <input ref="volume" class="volume" type="range" value="50" max="100">
-          </div> 
-
-          <button class="menu-button"></button>
-        </div>
-    </div>
-  </main>
-</template>
 
 <style scoped>
   main {
@@ -104,6 +136,13 @@
     display: flex;
   }
 
+  .controls-to-right {
+    display: flex;
+    justify-content: right;
+    text-align: right;
+    width: 37%;
+  }
+
   button {
     margin: 2px;
     border: none;
@@ -129,24 +168,24 @@
   }
 
   /* VOLUME BUTTON TO SHOW AND TO MANIPULATE THE VOLUME LEVEL */
-  .volume-button {
-    background-image: url('./assets/icons/speaker-96.png');
+  .volume-button-audio {
+    background-image: url('./assets/icons/audio-96.png');
+    background-size: cover;
+  }
+
+  .volume-button-no-audio {
+    background-image: url('./assets/icons/no-audio-96.png');
     background-size: cover;
   }
 
   .volume-control {
-    transition: all 1s;
     line-height: 38px;
-    width: 0px;
+    width: 83px;
     opacity: 0.9;
     padding-left: 3px;
     padding-right: 5px;
     .volume {
-      display: block;
-      opacity: 0;
-      transition: all 1s;
-      width: 0%;
-      height: 38px;
+      width: 100%;
     }
   }
 
