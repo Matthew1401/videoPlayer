@@ -25,7 +25,16 @@
           </div> 
 
           <button class="fullscreen-button" @click="fullscreen()"></button>
-          <button class="menu-button"></button>
+          <button class="menu-button" @click="showSelection = ! showSelection"></button>
+          <select class="video-speed" :class="[showSelection ? '': 'hide']" multiple>
+            <option @click="changePlaybackRate(0.25)">0.25</option>
+            <option @click="changePlaybackRate(0.5)">0.50</option>
+            <option @click="changePlaybackRate(0.75)">0.75</option>
+            <option selected @click="changePlaybackRate(1)">Normalna</option>
+            <option @click="changePlaybackRate(1.25)">1.25</option>
+            <option @click="changePlaybackRate(1.5)">1.50</option>
+            <option @click="changePlaybackRate(1.75)">1.75</option>
+          </select>
         </div>
       </div>
     </div>
@@ -43,8 +52,8 @@
   Done TODO: 8.Dodać możliwość przesuwania filmu o 15 sekund do przodu i do tyłu za pomocą strzałek.
   Done TODO: 9.Gdy ustawienia będą zmieniane w trybie fullscreen dodać aktualizacje wyglądu przycisków oraz volume.
   Done TODO: 10.Dodać całkowity czas pliku wideo.
-  
-  TODO: 11.Dodać wybór prędkości odtwarzania wideo. Najlepiej wybor select i option przy przycisku menu.
+  Done TODO: 11.Dodać wybór prędkości odtwarzania wideo. Najlepiej wybor select i option przy przycisku menu.
+
   TODO: 12.Dodać rezponsywność do strony.
 -->
 
@@ -61,6 +70,7 @@
   const durationSeconds = ref('00')
   const progress = ref(null)
   const progressBar = ref(null)
+  const showSelection = ref(false)
 
 
   onMounted(() => {
@@ -120,6 +130,11 @@
       video.value.volume = volumeLevel.value;
     }
   })
+
+  const changePlaybackRate = (rate) => {
+    video.value.playbackRate = rate
+    showSelection.value = false
+  }
 
   const currentTime = () => {
     durationTime()
@@ -187,15 +202,14 @@
   main {
     width: 100vw;
     height: 100vh;
+    font-size: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: gray;
   }
 
   .player {
     height: auto;
-    background-color: rgb(89, 204, 123);
     padding: 3px;
     position: relative;
   }
@@ -224,7 +238,7 @@
     display: flex;
     justify-content: right;
     text-align: right;
-    width: 30%;
+    width: 35%;
     float: right;
   }
 
@@ -232,8 +246,8 @@
     margin: 2px;
     border: none;
     border-radius: 15px;
-    height: 34px;
-    width: 34px;
+    height: 2.5em;
+    width: 2.5em;
     cursor: pointer;
   }
 
@@ -264,8 +278,7 @@
   }
 
   .volume-control {
-    line-height: 38px;
-    width: 83px;
+    width: 5em;
     opacity: 0.9;
     padding-left: 3px;
     padding-right: 5px;
@@ -282,7 +295,7 @@
     opacity: 0.7;
     transition: opacity 2s;
     width: 100%;
-    height: 13px;
+    height: 0.9em;
     -webkit-appearance: none;
     appearance: none;
     outline: none;
@@ -296,16 +309,16 @@
   .slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 1em;
+    height: 1em;
     background: orangered;
     border-radius: 50%;
     cursor: pointer;
   }
 
   .slider::-moz-range-thumb {
-    width: 25px;
-    height: 25px;
+    width: 1em;
+    height: 1em;
     background: orangered;
     cursor: pointer;
   }
@@ -323,19 +336,19 @@
 
   /* TIMER AND PROGRESS BAR */
   .timer {
-    line-height: 38px;
-    font-size: 10px;
+    line-height: 2.4em;
+    font-size: 0.8em;
     font-family: monospace;
     text-shadow: 1px 1px 0px black;
     color: white;
     position: relative;
-    width: 550px;
+    width: 60%;
   }
 
   .space-for-progress-bar {
     float: right;
     width: 87%;
-    height: 38px;
+    height: 100%;
     display: flex;
     justify-content: left;
     align-items: center;
@@ -344,7 +357,7 @@
   .progress-bar {
     background-color: rgba(192, 12, 12, 0.2);
     width: 100%;
-    height: 15px;
+    height: 0.9em;
     border: 1px solid rgba(192, 12, 12, 0.2);
     border-radius: 5px;
     cursor: pointer;
@@ -365,15 +378,158 @@
 
   .timer .current {
     position: absolute;
-    z-index: 3;
-    left: 19px;
-    font-size: 1rem;
+    left: 0.8em;
   }
 
   .timer .duration {
     position: absolute;
-    z-index: 3;
-    right: -50px;
-    font-size: 1rem;
+    right: -3.5em;
   }
+
+  .video-speed {
+    position: absolute;
+    height: 9em;
+    width: 5em;
+    top: -9em;
+    right: -0;
+    outline: none;
+    text-align: center;
+    border-radius: 5px;
+    font-family: monospace;
+    text-shadow: 1px 1px 0px black;
+    color: white;
+    font-size: 0.8em;
+    background-color: black;
+  }
+
+  .video-speed option:hover {
+    background-color: orangered;
+  }
+
+  .video-speed option:checked {
+    background-color: orangered;
+  }
+
+  .video-speed::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide {
+    display: none;
+  }
+
+  /* MEDIA SCREEN 1200PX */
+  @media only screen and (max-width: 1200px) {
+    video {
+      width: 640px;
+    }
+
+    button {
+      height: 1.8em;
+      width: 1.8em;
+    }
+
+    .volume-control {
+      width: 4em;
+    }
+
+    .slider {
+      height: 0.8em;
+    }
+
+    .slider::-webkit-slider-thumb {
+      width: 0.8em;
+      height: 0.8em;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 0.8em;
+      height: 0.8em;
+    }
+
+    .timer {
+      font-size: 0.6em;
+    }
+
+    .timer .current {
+      position: absolute;
+      left: 0.4em;
+    }
+
+    .timer .duration {
+      position: absolute;
+      right: -3.5em;
+    }
+
+     .controls-to-right {
+      width: 49%;
+    }
+
+    .space-for-progress-bar {
+      width: 80%;
+    }
+
+    .video-speed {
+      width: 5em;
+      font-size: 0.6em;
+    }
+  }
+
+  /* MEDIA SCREEN 720PX */
+  @media only screen and (max-width: 720px) {
+    video {
+      width: 480px;
+    }
+
+    button {
+      height: 1.5em;
+      width: 1.5em;
+    }
+
+    .volume-control {
+      width: 2.4em;
+    }
+
+    .slider {
+      height: 0.7em;
+    }
+
+    .slider::-webkit-slider-thumb {
+      width: 0.7em;
+      height: 0.7em;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 0.7em;
+      height: 0.7em;
+    }
+
+    .timer {
+      font-size: 0.5em;
+    }
+
+    .timer .current {
+      position: absolute;
+      left: 0.4em;
+    }
+
+    .timer .duration {
+      position: absolute;
+      right: -3.5em;
+    }
+
+    .controls-to-right {
+      width: 50%;
+    }
+
+    .space-for-progress-bar {
+      width: 80%;
+    }
+
+    .video-speed {
+      width: 5em;
+      font-size: 0.5em;
+    }
+  }
+
 </style>

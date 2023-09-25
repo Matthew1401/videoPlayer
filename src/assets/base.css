@@ -59,6 +59,7 @@
 }
 
 body {
+  background: linear-gradient(90deg, rgba(0,0,0,1) 0%, rgba(0,4,56,1) 55%, rgba(0,12,97,1) 100%);
   min-height: 100vh;
   line-height: 1.6;
   font-family:
